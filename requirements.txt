@@ -1,0 +1,8 @@
+
+llama-cpp-python
+huggingface-hub
+
+
+
+
+
