@@ -1,4 +1,4 @@
-
+from llama_cpp import Llama
 from nifiapi.flowfiletransform import FlowFileTransform, FlowFileTransformResult
 from nifiapi.properties import PropertyDescriptor, StandardValidators, ExpressionLanguageScope
 
@@ -11,40 +11,35 @@ class CallLocalLLM(FlowFileTransform):
         description = """Return a completion from a local LLM"""
         tags = ["LLM","GenAI", "Local Inference"]
 
-    PROMPT_TEXT = PropertyDescriptor(
-        name="Prompt Text",
-        description="Specifies the prompt to send",
+    
+    MODEL_PATH = PropertyDescriptor(
+        name="Model Path",
+        description="Specifies the path to an LLM model",
         required=True,
         validators=[StandardValidators.NON_EMPTY_VALIDATOR],
         expression_language_scope=ExpressionLanguageScope.FLOWFILE_ATTRIBUTES
     )
 
     property_descriptors = [
-        PROMPT_TEXT
+        MODEL_PATH
     ]
 
     def __init__(self, **kwargs):
-        super().__init__()
-        self.property_descriptors.append(self.PROMPT_TEXT)
+        pass
+        #super().__init__()
+        #self.descriptors.append(self.MODEL_PATH)
 
     def getPropertyDescriptors(self):
         return self.property_descriptors
     
     def transform(self, context, flowfile):
-        from llama_cpp import Llama
+        #prompt_text = context.getProperty(self.PROMPT_TEXT).evaluateAttributeExpressions(flowfile).getValue()
+        b_prompt_text = flowfile.getContentsAsBytes()
+        prompt_text = str(b_prompt_text)
+        model_path = context.getProperty(self.MODEL_PATH).evaluateAttributeExpressions(flowfile).getValue()
 
-        prompt_text = context.getProperty(self.PROMPT_TEXT).evaluateAttributeExpressions(flowfile).getValue()
-
-        #llm = Llama.from_pretrained(
-        #    repo_id="TheBloke/Mistral-7B-Instruct-v0.1-GGUF",
-        #    filename="mistral-7b-instruct-v0.1.Q4_K_M.gguf",
-        #    verbose=False
-        #)
-
-        llm = Llama(model_path="./mistral-7b-Q4.gguf",
-        )
-
-
+        llm = Llama(model_path=model_path)
+        
         output = llm("Q:" + prompt_text +" A: ", 
                      max_tokens=100,
                      stop=["Q:", "\n"], 
